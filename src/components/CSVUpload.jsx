@@ -22,7 +22,7 @@ function CSVUpload() {
 
     try {
       setLoading(true);
-      const res = await axios.post('http://localhost:3000/api/contacts/import-csv', formData, {
+      const res = await axios.post('https://outreach-demo.onrender.com/api/contacts/import-csv', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       toast.success(res.data.message);
@@ -36,7 +36,7 @@ function CSVUpload() {
 
   const fetchContacts = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/contacts');
+      const res = await axios.get('https://outreach-demo.onrender.com/api/contacts');
       setContacts(res.data.data);
     } catch (error) {
       toast.error('Failed to fetch contacts');
@@ -45,7 +45,7 @@ function CSVUpload() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/api/contacts/${id}`);
+      await axios.delete(`https://outreach-demo.onrender.com/api/contacts/${id}`);
       toast.success('Contact deleted!');
       fetchContacts();
     } catch (error) {

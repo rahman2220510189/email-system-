@@ -10,8 +10,8 @@ function Logs() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const emailLogs = await axios.get('http://localhost:3000/api/email/logs');
-      const whatsappLogs = await axios.get('http://localhost:3000/api/whatsapp/logs');
+      const emailLogs = await axios.get('https://outreach-demo.onrender.com/api/email/logs');
+      const whatsappLogs = await axios.get('https://outreach-demo.onrender.com/api/whatsapp/logs');
       const allLogs = [
         ...emailLogs.data.data,
         ...whatsappLogs.data.data

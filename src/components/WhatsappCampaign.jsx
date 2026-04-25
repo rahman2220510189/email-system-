@@ -21,7 +21,7 @@ function WhatsappCampaign() {
 
     try {
       setLoading(true);
-      const res = await axios.post('http://localhost:3000/api/whatsapp/send-bulk', form);
+      const res = await axios.post('https://outreach-demo.onrender.com/api/whatsapp/send-bulk', form);
       toast.success(res.data.message);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to start campaign!');

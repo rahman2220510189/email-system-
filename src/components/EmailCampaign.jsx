@@ -22,7 +22,7 @@ function EmailCampaign() {
 
     try {
       setLoading(true);
-      const res = await axios.post('http://localhost:3000/api/email/send-bulk', form);
+      const res = await axios.post('https://outreach-demo.onrender.com/api/email/send-bulk', form);
       toast.success(res.data.message);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to start campaign!');
