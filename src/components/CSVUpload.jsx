@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../Api/Api';
 import toast from 'react-hot-toast';
 
 function CSVUpload() {
@@ -22,7 +22,7 @@ function CSVUpload() {
 
     try {
       setLoading(true);
-      const res = await axios.post('https://outreach-demo.onrender.com/api/contacts/import-csv', formData, {
+      const res = await api.post('/contacts/import-csv', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       toast.success(res.data.message);
@@ -36,19 +36,19 @@ function CSVUpload() {
 
   const fetchContacts = async () => {
     try {
-      const res = await axios.get('https://outreach-demo.onrender.com/api/contacts');
+      const res = await api.get('/contacts');
       setContacts(res.data.data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to fetch contacts');
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`https://outreach-demo.onrender.com/api/contacts/${id}`);
+      await api.delete(`/contacts/${id}`);
       toast.success('Contact deleted!');
       fetchContacts();
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete contact');
     }
   };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../Api/Api';
 import toast from 'react-hot-toast';
 
 function EmailCampaign() {
@@ -22,7 +22,7 @@ function EmailCampaign() {
 
     try {
       setLoading(true);
-      const res = await axios.post('https://outreach-demo.onrender.com/api/email/send-bulk', form);
+      const res = await api.post('/email/send-bulk', form);
       toast.success(res.data.message);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to start campaign!');
