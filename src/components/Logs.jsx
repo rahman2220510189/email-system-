@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import toast from 'react-hot-toast';
-
+import api from '../Api/Api'; 
 function Logs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -10,14 +9,14 @@ function Logs() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const emailLogs = await axios.get('https://outreach-demo.onrender.com/api/email/logs');
-      const whatsappLogs = await axios.get('https://outreach-demo.onrender.com/api/whatsapp/logs');
+       const emailLogs = await api.get('/email/logs');
+const whatsappLogs = await api.get('/whatsapp/logs');
       const allLogs = [
         ...emailLogs.data.data,
         ...whatsappLogs.data.data
       ].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
       setLogs(allLogs);
-    } catch (error) {
+    } catch  {
       toast.error('Failed to fetch logs');
     } finally {
       setLoading(false);
@@ -25,7 +24,10 @@ function Logs() {
   };
 
   useEffect(() => {
-    fetchLogs();
+    const loadLogs = async () => {
+      await fetchLogs();
+    };
+    loadLogs();
   }, []);
 
   const filteredLogs = logs.filter(log => {
