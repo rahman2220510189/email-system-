@@ -1,22 +1,26 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import api from '../Api/Api'; 
+import api from '../Api/Api';
+
+const ITEMS_PER_PAGE = 50;
+
 function Logs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchLogs = async () => {
     try {
       setLoading(true);
-       const emailLogs = await api.get('/email/logs');
-const whatsappLogs = await api.get('/whatsapp/logs');
+      const emailLogs = await api.get('/email/logs');
+      const whatsappLogs = await api.get('/whatsapp/logs');
       const allLogs = [
         ...emailLogs.data.data,
         ...whatsappLogs.data.data
       ].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
       setLogs(allLogs);
-    } catch  {
+    } catch {
       toast.error('Failed to fetch logs');
     } finally {
       setLoading(false);
@@ -25,7 +29,20 @@ const whatsappLogs = await api.get('/whatsapp/logs');
 
   useEffect(() => {
     const loadLogs = async () => {
-      await fetchLogs();
+      try {
+        setLoading(true);
+        const emailLogs = await api.get('/email/logs');
+        const whatsappLogs = await api.get('/whatsapp/logs');
+        const allLogs = [
+          ...emailLogs.data.data,
+          ...whatsappLogs.data.data
+        ].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
+        setLogs(allLogs);
+      } catch {
+        toast.error('Failed to fetch logs');
+      } finally {
+        setLoading(false);
+      }
     };
     loadLogs();
   }, []);
@@ -38,6 +55,17 @@ const whatsappLogs = await api.get('/whatsapp/logs');
     if (filter === 'failed') return log.status === 'failed';
     return true;
   });
+
+  const totalPages = Math.ceil(filteredLogs.length / ITEMS_PER_PAGE);
+  const paginatedLogs = filteredLogs.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handleFilterChange = (f) => {
+    setFilter(f);
+    setCurrentPage(1);
+  };
 
   const stats = {
     total: logs.length,
@@ -83,7 +111,7 @@ const whatsappLogs = await api.get('/whatsapp/logs');
           {['all', 'email', 'whatsapp', 'sent', 'failed'].map(f => (
             <button
               key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => handleFilterChange(f)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 filter === f
                   ? 'bg-blue-600 text-white'
@@ -100,52 +128,99 @@ const whatsappLogs = await api.get('/whatsapp/logs');
         ) : filteredLogs.length === 0 ? (
           <p className="text-center text-gray-400 py-8">No logs found.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 text-left">
-                  <th className="px-4 py-3 font-medium text-gray-600">Type</th>
-                  <th className="px-4 py-3 font-medium text-gray-600">Contact</th>
-                  <th className="px-4 py-3 font-medium text-gray-600">Subject/Message</th>
-                  <th className="px-4 py-3 font-medium text-gray-600">Status</th>
-                  <th className="px-4 py-3 font-medium text-gray-600">Sent At</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredLogs.map((log) => (
-                  <tr key={log._id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        log.type === 'email'
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'bg-green-100 text-green-700'
-                      }`}>
-                        {log.type === 'email' ? '✉️ Email' : '💬 WhatsApp'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      {log.email || log.phone}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 max-w-xs truncate">
-                      {log.subject || log.message || '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        log.status === 'sent'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}>
-                        {log.status === 'sent' ? '✅ Sent' : '❌ Failed'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {new Date(log.sentAt).toLocaleString()}
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 text-left">
+                    <th className="px-4 py-3 font-medium text-gray-600">Type</th>
+                    <th className="px-4 py-3 font-medium text-gray-600">Contact</th>
+                    <th className="px-4 py-3 font-medium text-gray-600">Subject/Message</th>
+                    <th className="px-4 py-3 font-medium text-gray-600">Status</th>
+                    <th className="px-4 py-3 font-medium text-gray-600">Sent At</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {paginatedLogs.map((log) => (
+                    <tr key={log._id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          log.type === 'email'
+                            ? 'bg-purple-100 text-purple-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {log.type === 'email' ? '✉️ Email' : '💬 WhatsApp'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">{log.email || log.phone}</td>
+                      <td className="px-4 py-3 text-gray-500 max-w-xs truncate">
+                        {log.subject || log.message || '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          log.status === 'sent'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {log.status === 'sent' ? '✅ Sent' : '❌ Failed'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">
+                        {new Date(log.sentAt).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center mt-4">
+                <p className="text-sm text-gray-500">
+                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredLogs.length)} of {filteredLogs.length}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 rounded-lg text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40"
+                  >
+                    ← Prev
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                    .reduce((acc, p, idx, arr) => {
+                      if (idx > 0 && p - arr[idx - 1] > 1) acc.push('...');
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((p, idx) => p === '...' ? (
+                      <span key={idx} className="px-2 py-1 text-gray-400 text-sm">...</span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => setCurrentPage(p)}
+                        className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                          currentPage === p
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 rounded-lg text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40"
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
