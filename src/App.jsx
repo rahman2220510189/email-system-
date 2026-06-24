@@ -8,19 +8,22 @@ import Scraper from './components/Scraper';
 import Login from './Login/Login';
 import AccessManagement from './Login/Accessmanagement';
 import Unsubscribe from './components/Unsubscribe';
+import Dashboard from './components/Dashboard';
 function App() {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('ainoviro_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [activeTab, setActiveTab] = useState('csv');
- if (window.location.pathname === '/unsubscribe') {
+
+
+const [activeTab, setActiveTab] = useState('dashboard'); if (window.location.pathname === '/unsubscribe') {
     return <Unsubscribe />;
   }
   // Nothing below this renders until someone is actually logged in.
   if (!user) {
     return <Login onLogin={setUser} />;
   }
+
 
   const handleLogout = () => {
     localStorage.removeItem('ainoviro_token');
@@ -29,6 +32,8 @@ function App() {
   };
 
   const tabs = [
+        { id: 'dashboard', label: '🏠 Dashboard' },
+
     { id: 'csv', label: '📋 CSV Upload' },
     { id: 'email', label: '✉️ Email Campaign' },
     { id: 'whatsapp', label: '💬 WhatsApp Campaign' },
@@ -79,6 +84,8 @@ function App() {
 
         {/* Content */}
         <div className="mt-6">
+          {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
+
           {activeTab === 'csv' && <CSVUpload />}
           {activeTab === 'email' && <EmailCampaign />}
           {activeTab === 'whatsapp' && <WhatsappCampaign />}
