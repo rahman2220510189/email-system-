@@ -48,13 +48,32 @@ function CSVUpload() {
       setLoading(false);
     }
   };
+  const handleResetHistory = async () => {
+    if (!window.confirm('This will clear ALL CSV sending history. You will be able to resend emails to everyone again. Continue?')) {
+      return;
+    }
+    try {
+      const res = await api.post('/email/clear-csv-history', { clearAll: true });
+      toast.success(res.data.message);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to reset history');
+    }
+};
 
   return (
     <div className="space-y-6">
 
       {/* Upload Box */}
       <div className="bg-white rounded-xl shadow p-6">
-        <h2 className="text-lg font-bold text-gray-800 mb-4">📋 CSV Email Campaign</h2>
+        <div className="flex justify-between items-center mb-4">
+  <h2 className="text-lg font-bold text-gray-800">📋 CSV Email Campaign</h2>
+  <button
+    onClick={handleResetHistory}
+    className="text-xs text-red-500 hover:text-red-700 hover:underline font-medium"
+  >
+    🔄 Reset Sent History (Testing)
+  </button>
+</div>
 
         <div className="border-2 border-dashed border-blue-300 rounded-xl p-8 text-center bg-blue-50">
           <p className="text-gray-500 mb-2">CSV format: name, email, phone, businessName</p>
