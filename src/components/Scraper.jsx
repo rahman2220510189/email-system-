@@ -10,6 +10,9 @@ function Scraper() {
   const [logs, setLogs] = useState([]);
 const [osmLoading, setOsmLoading] = useState(false);
 const [dirLoading, setDirLoading] = useState(false);
+const [cypindexCategories, setCypindexCategories] = useState([]);
+const [selectedCypindex, setSelectedCypindex] = useState('');
+const [cypindexLoading, setCypindexLoading] = useState(false);
   const fetchLogs = useCallback(async () => {
     try {
       const res = await api.get('/scraper/logs');
@@ -22,12 +25,14 @@ const [dirLoading, setDirLoading] = useState(false);
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const [osm, dir] = await Promise.all([
-          api.get('/scraper/categories'),
-          api.get('/scraper/directory-categories')
-        ]);
-        setOsmCategories(osm.data.data);
-        setDirCategories(dir.data.data);
+      const [osm, dir, cypindex] = await Promise.all([
+  api.get('/scraper/categories'),
+  api.get('/scraper/directory-categories'),
+  api.get('/scraper/cypindex-categories')
+]);
+setOsmCategories(osm.data.data);
+setDirCategories(dir.data.data);
+setCypindexCategories(cypindex.data.data);
       } catch {
         toast.error('Failed to fetch categories');
       }
@@ -86,6 +91,33 @@ const [dirLoading, setDirLoading] = useState(false);
     }
 };
 
+const runCypindexScraperFn = async () => {
+  if (!selectedCypindex) {
+    toast.error('Please select a category!');
+    return;
+  }
+  try {
+    setCypindexLoading(true);
+    await api.post('/scraper/run-cypindex', {
+      categoryKey: selectedCypindex,
+      maxPagesPerSlug: 5
+    });
+    const interval = setInterval(async () => {
+      const res = await api.get('/scraper/logs');
+      const latestLog = res.data.data[0];
+      if (latestLog && latestLog.completedAt) {
+        clearInterval(interval);
+        setCypindexLoading(false);
+        setLogs(res.data.data);
+        toast.success(`✅ Done! Added ${latestLog.added} contacts.`);
+      }
+    }, 5000);
+  } catch {
+    toast.error('Scraper failed!');
+    setCypindexLoading(false);
+  }
+};
+
   return (
     <div className="space-y-6">
 
@@ -115,6 +147,33 @@ const [dirLoading, setDirLoading] = useState(false);
 </button>
         </div>
       </div>
+
+      {/* CypIndex Scraper */}
+<div className="bg-white rounded-xl shadow p-6">
+  <h2 className="text-lg font-bold text-gray-800 mb-2">🔍 CypIndex Scraper</h2>
+  <p className="text-sm text-gray-500 mb-4">
+    27,000+ businesses — restaurants, automotive, legal, construction, retail & more
+  </p>
+  <div className="flex gap-3">
+    <select
+      value={selectedCypindex}
+      onChange={(e) => setSelectedCypindex(e.target.value)}
+      className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+    >
+      <option value="">Select a category...</option>
+      {cypindexCategories.map(cat => (
+        <option key={cat.key} value={cat.key}>{cat.label}</option>
+      ))}
+    </select>
+    <button
+      onClick={runCypindexScraperFn}
+      disabled={cypindexLoading}
+      className="bg-green-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+    >
+      {cypindexLoading ? 'Running...' : '🚀 Run'}
+    </button>
+  </div>
+</div>
 
       {/* Directory Scraper */}
       <div className="bg-white rounded-xl shadow p-6">
